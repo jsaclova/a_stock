@@ -1,6 +1,10 @@
 import type { StockDataResponse, NewsResponse, MarketQuotesResponse, TopStocksResponse, FxKrwResponse, TickerResponse, PortfolioResponse } from "@/types";
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || "";
+// 시장 데이터 함수 base: Cloud URL(supabase.co)이면 같은 origin 사용.
+// Cloud에는 Edge Functions가 없으므로, 데이터는 항상
+// 로컬 스택·CasaOS 프록시·Vercel /api 중 같은 origin에서 가져온다.
+const RAW_BASE = import.meta.env.VITE_SUPABASE_URL || "";
+const SUPABASE_URL = RAW_BASE.includes("supabase.co") ? "" : RAW_BASE;
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || "";
 
 export async function fetchStockData(
