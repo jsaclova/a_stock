@@ -202,29 +202,30 @@ export default function App() {
           </div>
           <div className="shrink-0 pb-1 flex items-end gap-2">
             <TickerSearch />
-            {user ? (
-              <>
-                <span className="hidden md:inline text-xs text-[#C5CAD3] pb-2 max-w-40 truncate">
-                  {user.email}
-                </span>
+            {supabase &&
+              (user ? (
+                <>
+                  <span className="hidden md:inline text-xs text-[#C5CAD3] pb-2 max-w-40 truncate">
+                    {user.email}
+                  </span>
+                  <button
+                    onClick={handleLogout}
+                    title="로그아웃"
+                    className="btn-secondary p-2 rounded-xl flex items-center gap-1.5 text-xs font-semibold"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    <span className="hidden sm:inline">로그아웃</span>
+                  </button>
+                </>
+              ) : (
                 <button
-                  onClick={handleLogout}
-                  title="로그아웃"
-                  className="btn-secondary p-2 rounded-xl flex items-center gap-1.5 text-xs font-semibold"
+                  onClick={() => setAuthOpen(true)}
+                  className="flex items-center gap-1.5 bg-[#0066FF] text-white text-sm font-semibold px-3.5 py-2 rounded-xl hover:bg-[#0052cc] transition-colors"
                 >
-                  <LogOut className="w-4 h-4" />
-                  <span className="hidden sm:inline">로그아웃</span>
+                  <LogIn className="w-4 h-4" />
+                  로그인
                 </button>
-              </>
-            ) : (
-              <button
-                onClick={() => setAuthOpen(true)}
-                className="flex items-center gap-1.5 bg-[#0066FF] text-white text-sm font-semibold px-3.5 py-2 rounded-xl hover:bg-[#0052cc] transition-colors"
-              >
-                <LogIn className="w-4 h-4" />
-                로그인
-              </button>
-            )}
+              ))}
           </div>
         </div>
       </header>
