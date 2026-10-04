@@ -151,23 +151,25 @@ async function translateNewsTitles(
   );
 }
 
-// "오늘" 발행된 뉴스만 남김. 오늘 뉴스가 하나도 없으면 최근 24시간 뉴스로 대체.
+// 오늘 뉴스를 우선으로, 부족하면 72시간 이내 뉴스로 채움 (최대 15개)
 function filterTodayNews(news: NewsResponse["news"]): NewsResponse["news"] {
   const now = Date.now();
   const startOfToday = new Date();
   startOfToday.setHours(0, 0, 0, 0);
 
-  const todayNews = news.filter(
-    (item) => item.providerPublishTime * 1000 >= startOfToday.getTime(),
-  );
-  const target =
-    todayNews.length > 0
-      ? todayNews
-      : news.filter(
-          (item) => item.providerPublishTime * 1000 >= now - 24 * 60 * 60 * 1000,
-        );
-
-  return [...target].sort(
+  const sorted = [...news].sort(
     (a, b) => b.providerPublishTime - a.providerPublishTime,
   );
+  const todayNews = sorted.filter(
+    (item) => item.providerPublishTime * 1000 >= startOfToday.getTime(),
+  );
+  if (todayNews.length >= 5) return todayNews.slice(0, 15);
+
+  const seen = new Set(todayNews.map((item) => item.uuid));
+  const recent = sorted.filter(
+    (item) =>
+      !seen.has(item.uuid) &&
+      item.providerPublishTime * 1000 >= now - 72 * 60 * 60 * 1000,
+  );
+  return [...todayNews, ...recent].slice(0, 15);
 }

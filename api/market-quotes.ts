@@ -20,13 +20,6 @@ interface Group {
   items: Quote[];
 }
 
-const BONDS = [
-  { name: "미국 국채 2년물", series: "DGS2" },
-  { name: "미국 국채 10년물", series: "DGS10" },
-  { name: "미국 국채 20년물", series: "DGS20" },
-  { name: "미국 국채 30년물", series: "DGS30" },
-];
-
 const OIL = [
   { name: "WTI 원유", symbol: "CL=F" },
   { name: "브렌트유", symbol: "BZ=F" },
@@ -62,39 +55,107 @@ async function fetchWithTimeout(url: string, init?: RequestInit): Promise<Respon
   }
 }
 
-async function fetchFredQuote(name: string, seriesId: string): Promise<Quote | null> {
+const BONDS = [
+  { name: "미국 국채 2년물", field: "BC_2YEAR", symbol: "UST2Y" },
+  { name: "미국 국채 10년물", field: "BC_10YEAR", symbol: "UST10Y" },
+  { name: "미국 국채 20년물", field: "BC_20YEAR", symbol: "UST20Y" },
+  { name: "미국 국채 30년물", field: "BC_30YEAR", symbol: "UST30Y" },
+];
+
+// Yahoo 폴백 (Treasury 피드 실패 시): 20년물은 대체 심볼 없음
+const BOND_YAHOO_FALLBACK: Record<string, string> = {
+  "미국 국채 2년물": "2YY=F",
+  "미국 국채 10년물": "^TNX",
+  "미국 국채 30년물": "^TYX",
+};
+
+const TREASURY_URL =
+  "https://home.treasury.gov/policy-issues/financing-the-government/interest-rate-statistics";
+
+interface YieldBar {
+  date: string;
+  values: Record<string, number>;
+}
+
+async function fetchTreasuryYear(year: number): Promise<YieldBar[]> {
   try {
-    const resp = await fetchWithTimeout(`https://fred.stlouisfed.org/graph/fredgraph.csv?id=${seriesId}`);
-    if (!resp.ok) return null;
-    const text = await resp.text();
-    const rows = text
-      .trim()
-      .split("\n")
-      .slice(1)
-      .map((line) => line.split(","))
-      .filter((r) => r.length === 2 && r[1] !== ".");
-    if (rows.length < 2) return null;
-    const price = Number(rows[rows.length - 1][1]);
-    const prev = Number(rows[rows.length - 2][1]);
-    const change = price - prev;
-    const yearly = rows.slice(-253);
-    const spark = yearly
-      .filter((_, i) => i % 7 === 0 || i === yearly.length - 1)
-      .map((r) => Number(r[1]))
-      .filter((n) => !isNaN(n));
-    return {
-      name,
-      symbol: seriesId,
-      price: round2(price),
-      change: round2(change),
-      changePct: prev !== 0 ? round2((change / prev) * 100) : 0,
-      unit: "%",
-      spark,
-      url: `https://fred.stlouisfed.org/series/${seriesId}`,
-    };
+    const resp = await fetchWithTimeout(
+      `https://home.treasury.gov/resource-center/data-chart-center/interest-rates/pages/xml?data=daily_treasury_yield_curve&field_tdr_date_value=${year}`,
+      {
+        headers: {
+          "User-Agent":
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36",
+        },
+      },
+    );
+    if (!resp.ok) return [];
+    const xml = await resp.text();
+    const entries = xml.match(/<entry>([\s\S]*?)<\/entry>/g) ?? [];
+    const fields = ["BC_2YEAR", "BC_10YEAR", "BC_20YEAR", "BC_30YEAR"];
+    const out: YieldBar[] = [];
+    for (const entry of entries) {
+      const dateM = entry.match(/<d:NEW_DATE[^>]*>([^<]*)<\/d:NEW_DATE>/);
+      if (!dateM) continue;
+      const date = dateM[1].slice(0, 10);
+      const values: Record<string, number> = {};
+      for (const f of fields) {
+        const m = entry.match(new RegExp(`<d:${f}[^>]*>([^<]*)</d:${f}>`));
+        const v = m ? Number(m[1]) : NaN;
+        if (!isNaN(v)) values[f] = v;
+      }
+      out.push({ date, values });
+    }
+    out.sort((a, b) => (a.date < b.date ? -1 : 1));
+    return out;
   } catch {
-    return null;
+    return [];
   }
+}
+
+async function fetchTreasuryBonds(): Promise<Quote[]> {
+  const year = new Date().getFullYear();
+  const [cur, prev] = await Promise.all([
+    fetchTreasuryYear(year),
+    fetchTreasuryYear(year - 1),
+  ]);
+  const byDate = new Map<string, Record<string, number>>();
+  for (const bar of [...prev, ...cur]) byDate.set(bar.date, bar.values);
+  const dates = [...byDate.keys()].sort();
+
+  const quotes: Quote[] = [];
+  for (const b of BONDS) {
+    const series: number[] = [];
+    for (const d of dates) {
+      const v = byDate.get(d)?.[b.field];
+      if (v !== undefined) series.push(v);
+    }
+    if (series.length >= 2) {
+      const price = series[series.length - 1];
+      const prevPrice = series[series.length - 2];
+      const change = price - prevPrice;
+      const spark = series
+        .slice(-260)
+        .filter((_, i, arr) => i % 5 === 0 || i === arr.length - 1);
+      quotes.push({
+        name: b.name,
+        symbol: b.symbol,
+        price: round2(price),
+        change: round2(change),
+        changePct: prevPrice !== 0 ? round2((change / prevPrice) * 100) : 0,
+        unit: "%",
+        spark,
+        url: TREASURY_URL,
+      });
+      continue;
+    }
+    // 폴백: Yahoo 심볼 (20년물은 없음)
+    const fallback = BOND_YAHOO_FALLBACK[b.name];
+    if (fallback) {
+      const q = await fetchYahooQuote(b.name, fallback, "%");
+      if (q) quotes.push({ ...q, symbol: b.symbol, url: TREASURY_URL });
+    }
+  }
+  return quotes;
 }
 
 async function fetchYahooQuote(name: string, symbol: string, unit: string): Promise<Quote | null> {
@@ -145,14 +206,14 @@ export default async function handler(req: Request): Promise<Response> {
   }
   try {
     const [bonds, oil, commodities, currencies] = await Promise.all([
-      Promise.all(BONDS.map((b) => fetchFredQuote(b.name, b.series))),
+      fetchTreasuryBonds(),
       Promise.all(OIL.map((o) => fetchYahooQuote(o.name, o.symbol, "USD/bbl"))),
       Promise.all(COMMODITIES.map((c) => fetchYahooQuote(c.name, c.symbol, "USD"))),
       Promise.all(CURRENCIES.map((c) => fetchYahooQuote(c.name, c.symbol, ""))),
     ]);
 
     const groups: Group[] = [
-      { id: "bonds", items: bonds.filter((q): q is Quote => q !== null) },
+      { id: "bonds", items: bonds },
       { id: "oil", items: oil.filter((q): q is Quote => q !== null) },
       { id: "commodities", items: commodities.filter((q): q is Quote => q !== null) },
       { id: "currencies", items: currencies.filter((q): q is Quote => q !== null) },
