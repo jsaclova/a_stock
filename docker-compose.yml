@@ -1,0 +1,116 @@
+# CasaOS 배포용 compose — 프런트(nginx) 1개 + Deno 함수 7개 + Auth/DB 3개
+# 사용법: docker compose up -d --build → http://<서버IP>:8090
+services:
+  web:
+    build:
+      context: .
+      args:
+        VITE_SUPABASE_URL: ${SUPABASE_URL:-}
+        VITE_SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY:-eyJhbGciOiAiSFMyNTYiLCAidHlwIjogIkpXVCJ9.eyJpc3MiOiAic3VwYWJhc2UiLCAicm9sZSI6ICJhbm9uIiwgImlhdCI6IDE3OTExMzAwODgsICJleHAiOiAyMDgyNzU4NDAwfQ.rtSlAa-urnnfQWiL7uZ_NmExHGRUci-2_6iSqSwYZsU}
+    ports:
+      - "8090:80"
+    depends_on:
+      - stock-data
+      - market-news
+      - market-quotes
+      - top-stocks
+      - fx-krw
+      - ticker
+      - portfolio
+      - auth
+      - rest
+    restart: unless-stopped
+
+  # Supabase Auth (GoTrue) — 개인별 자동매매 설정용
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: Ast0ckPgDb2026
+      POSTGRES_DB: postgres
+      AUTH_DB_PASSWORD: Ast0ckAuthDb2026
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./deploy/init-db:/docker-entrypoint-initdb.d:ro
+    restart: unless-stopped
+
+  auth:
+    image: supabase/auth:v2.197.0
+    environment:
+      API_EXTERNAL_URL: ${API_EXTERNAL_URL:-http://localhost:8090}
+      GOTRUE_API_PORT: 9999
+      GOTRUE_DB_DRIVER: postgres
+      GOTRUE_DB_DATABASE_URL: postgres://postgres:Ast0ckPgDb2026@db:5432/postgres?search_path=auth
+      GOTRUE_SITE_URL: ${API_EXTERNAL_URL:-http://localhost:8090}
+      GOTRUE_JWT_SECRET: EGPt4zMe50TMO77AMQnzVVmkoVd39k3IcmNL3p4V95o
+      GOTRUE_JWT_EXP: 3600
+      GOTRUE_JWT_AUD: authenticated
+      GOTRUE_JWT_DEFAULT_GROUP_NAME: authenticated
+      GOTRUE_DISABLE_SIGNUP: "false"
+      GOTRUE_MAILER_AUTOCONFIRM: "true"
+    depends_on:
+      - db
+    restart: unless-stopped
+
+  rest:
+    image: postgrest/postgrest:v12.2.9
+    environment:
+      PGRST_DB_URI: postgres://authenticator:Ast0ckAuthDb2026@db:5432/postgres
+      PGRST_DB_SCHEMAS: public
+      PGRST_DB_ANON_ROLE: anon
+      PGRST_JWT_SECRET: EGPt4zMe50TMO77AMQnzVVmkoVd39k3IcmNL3p4V95o
+    depends_on:
+      - db
+    restart: unless-stopped
+
+  stock-data:
+    image: denoland/deno:2.1.4
+    command: run --allow-net /functions/stock-data/index.ts
+    volumes:
+      - ./supabase/functions:/functions:ro
+    restart: unless-stopped
+
+  market-news:
+    image: denoland/deno:2.1.4
+    command: run --allow-net /functions/market-news/index.ts
+    volumes:
+      - ./supabase/functions:/functions:ro
+    restart: unless-stopped
+
+  market-quotes:
+    image: denoland/deno:2.1.4
+    command: run --allow-net /functions/market-quotes/index.ts
+    volumes:
+      - ./supabase/functions:/functions:ro
+    restart: unless-stopped
+
+  top-stocks:
+    image: denoland/deno:2.1.4
+    command: run --allow-net /functions/top-stocks/index.ts
+    volumes:
+      - ./supabase/functions:/functions:ro
+    restart: unless-stopped
+
+  fx-krw:
+    image: denoland/deno:2.1.4
+    command: run --allow-net /functions/fx-krw/index.ts
+    volumes:
+      - ./supabase/functions:/functions:ro
+    restart: unless-stopped
+
+  ticker:
+    image: denoland/deno:2.1.4
+    command: run --allow-net /functions/ticker/index.ts
+    volumes:
+      - ./supabase/functions:/functions:ro
+    restart: unless-stopped
+
+  portfolio:
+    image: denoland/deno:2.1.4
+    command: run --allow-net /functions/portfolio/index.ts
+    volumes:
+      - ./supabase/functions:/functions:ro
+    restart: unless-stopped
+
+volumes:
+  pgdata:

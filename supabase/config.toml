@@ -1,0 +1,22 @@
+project_id = "dca-dashboard"
+
+[functions.stock-data]
+verify_jwt = false
+
+[functions.market-news]
+verify_jwt = false
+
+[functions.market-quotes]
+verify_jwt = false
+
+[functions.top-stocks]
+verify_jwt = false
+
+[functions.fx-krw]
+verify_jwt = false
+
+[functions.ticker]
+verify_jwt = false
+
+[functions.portfolio]
+verify_jwt = false
