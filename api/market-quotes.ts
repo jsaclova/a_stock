@@ -77,8 +77,9 @@ interface YieldBar {
   values: Record<string, number>;
 }
 
-async function fetchTreasuryYear(year: number): Promise<YieldBar[]> {
+async function fetchTreasuryYear(year: number, debug?: Record<string, unknown>): Promise<YieldBar[]> {
   try {
+    const t0 = Date.now();
     const resp = await fetchWithTimeout(
       `https://home.treasury.gov/resource-center/data-chart-center/interest-rates/pages/xml?data=daily_treasury_yield_curve&field_tdr_date_value=${year}`,
       {
@@ -88,6 +89,7 @@ async function fetchTreasuryYear(year: number): Promise<YieldBar[]> {
         },
       },
     );
+    if (debug) debug[`treasury_${year}`] = `http=${resp.status} ${(Date.now() - t0) / 1000}s`;
     if (!resp.ok) return [];
     const xml = await resp.text();
     const entries = xml.match(/<entry>([\s\S]*?)<\/entry>/g) ?? [];
@@ -106,17 +108,19 @@ async function fetchTreasuryYear(year: number): Promise<YieldBar[]> {
       out.push({ date, values });
     }
     out.sort((a, b) => (a.date < b.date ? -1 : 1));
+    if (debug) debug[`treasury_${year}_entries`] = out.length;
     return out;
-  } catch {
+  } catch (err) {
+    if (debug) debug[`treasury_${year}_error`] = err instanceof Error ? err.message : String(err);
     return [];
   }
 }
 
-async function fetchTreasuryBonds(): Promise<Quote[]> {
+async function fetchTreasuryBonds(debug?: Record<string, unknown>): Promise<Quote[]> {
   const year = new Date().getFullYear();
   const [cur, prev] = await Promise.all([
-    fetchTreasuryYear(year),
-    fetchTreasuryYear(year - 1),
+    fetchTreasuryYear(year, debug),
+    fetchTreasuryYear(year - 1, debug),
   ]);
   const byDate = new Map<string, Record<string, number>>();
   for (const bar of [...prev, ...cur]) byDate.set(bar.date, bar.values);
@@ -152,7 +156,10 @@ async function fetchTreasuryBonds(): Promise<Quote[]> {
     const fallback = BOND_YAHOO_FALLBACK[b.name];
     if (fallback) {
       const q = await fetchYahooQuote(b.name, fallback, "%");
+      if (debug) debug[`yahoo_${fallback}`] = q ? `${q.price}` : "null";
       if (q) quotes.push({ ...q, symbol: b.symbol, url: TREASURY_URL });
+    } else if (debug) {
+      debug[`${b.field}_missing`] = `series=${series.length}`;
     }
   }
   return quotes;
@@ -205,8 +212,11 @@ export default async function handler(req: Request): Promise<Response> {
     return new Response(null, { status: 200, headers: corsHeaders });
   }
   try {
+    const url = new URL(req.url);
+    const debugMode = url.searchParams.get("debug") === "1";
+    const debug: Record<string, unknown> = {};
     const [bonds, oil, commodities, currencies] = await Promise.all([
-      fetchTreasuryBonds(),
+      fetchTreasuryBonds(debugMode ? debug : undefined),
       Promise.all(OIL.map((o) => fetchYahooQuote(o.name, o.symbol, "USD/bbl"))),
       Promise.all(COMMODITIES.map((c) => fetchYahooQuote(c.name, c.symbol, "USD"))),
       Promise.all(CURRENCIES.map((c) => fetchYahooQuote(c.name, c.symbol, ""))),
@@ -220,7 +230,11 @@ export default async function handler(req: Request): Promise<Response> {
     ];
 
     return new Response(
-      JSON.stringify({ groups, fetchedAt: new Date().toISOString() }),
+      JSON.stringify({
+        groups,
+        fetchedAt: new Date().toISOString(),
+        ...(debugMode ? { debug } : {}),
+      }),
       {
         status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json", "Cache-Control": "no-store" },
