@@ -1,7 +1,7 @@
 import type { StockDataResponse, NewsResponse, MarketQuotesResponse, TopStocksResponse, FxKrwResponse, TickerResponse, PortfolioResponse } from "@/types";
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || "";
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || "";
 
 export async function fetchStockData(
   monthlyAmount: number,
