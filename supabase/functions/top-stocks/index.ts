@@ -118,11 +118,23 @@ interface Row {
   marketCap: number | null;
 }
 
+const FETCH_TIMEOUT_MS = 8000;
+
+async function fetchWithTimeout(url: string, init?: RequestInit): Promise<Response> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+  try {
+    return await fetch(url, { ...init, signal: controller.signal });
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 async function fetchMarketCap(symbol: string): Promise<number | null> {
   try {
     const now = Math.floor(Date.now() / 1000);
     const from = now - 90 * 24 * 60 * 60;
-    const resp = await fetch(
+    const resp = await fetchWithTimeout(
       `https://query1.finance.yahoo.com/ws/fundamentals-timeseries/v1/finance/timeseries/${symbol}?type=trailingMarketCap&period1=${from}&period2=${now}`,
       {
         headers: {
@@ -144,7 +156,7 @@ async function fetchMarketCap(symbol: string): Promise<number | null> {
 
 async function fetchDaily(symbol: string, name: string, rank: number): Promise<Row | null> {
   try {
-    const resp = await fetch(
+    const resp = await fetchWithTimeout(
       `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?range=5d&interval=1d`,
       {
         headers: {

@@ -16,6 +16,18 @@ interface Group {
   items: Quote[];
 }
 
+const FETCH_TIMEOUT_MS = 8000;
+
+async function fetchWithTimeout(url: string, init?: RequestInit): Promise<Response> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+  try {
+    return await fetch(url, { ...init, signal: controller.signal });
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 const BONDS = [
   { name: "미국 국채 2년물", series: "DGS2" },
   { name: "미국 국채 10년물", series: "DGS10" },
@@ -48,7 +60,7 @@ const round2 = (n: number) => Math.round(n * 100) / 100;
 
 async function fetchFredQuote(name: string, seriesId: string): Promise<Quote | null> {
   try {
-    const resp = await fetch(`https://fred.stlouisfed.org/graph/fredgraph.csv?id=${seriesId}`);
+    const resp = await fetchWithTimeout(`https://fred.stlouisfed.org/graph/fredgraph.csv?id=${seriesId}`);
     if (!resp.ok) return null;
     const text = await resp.text();
     const rows = text
@@ -84,7 +96,7 @@ async function fetchFredQuote(name: string, seriesId: string): Promise<Quote | n
 async function fetchYahooQuote(name: string, symbol: string, unit: string): Promise<Quote | null> {
   try {
     const encoded = encodeURIComponent(symbol);
-    const resp = await fetch(
+    const resp = await fetchWithTimeout(
       `https://query1.finance.yahoo.com/v8/finance/chart/${encoded}?range=1y&interval=1wk`,
       {
         headers: {
