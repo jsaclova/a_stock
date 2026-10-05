@@ -2,7 +2,6 @@ import {
   ResponsiveContainer,
   ComposedChart,
   Area,
-  Line,
   XAxis,
   YAxis,
   Tooltip,
@@ -91,7 +90,7 @@ export default function GrowthChart({ results, scenarios, declinePct }: Props) {
   }
 
   return (
-    <div className="surface p-8">
+    <div className="surface p-4 sm:p-8">
       <div className="flex items-center justify-between mb-6 flex-wrap gap-2">
         <h2 className="text-white font-semibold text-lg tracking-tight">
           {isScenario ? "가상 하락 시나리오 시뮬레이션" : "자산 성장 추이"}

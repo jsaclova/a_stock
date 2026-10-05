@@ -42,7 +42,7 @@ function leverageBadge(leverage: string) {
 function EtfTable({ list, prices, selected }: { list: EtfInfo[]; prices: Prices; selected: string }) {
   return (
     <div className="overflow-x-auto">
-      <table className="w-full text-sm">
+      <table className="w-full min-w-[560px] text-sm">
         <thead>
           <tr className="border-b border-white/10">
             <th className="text-left py-3 px-3 text-[#C5CAD3] font-semibold text-xs">구분</th>
@@ -229,7 +229,7 @@ export default function EtfList() {
 
   return (
     <div className="space-y-6">
-      <div className="surface p-6 sm:p-8">
+      <div className="surface p-5 sm:p-8">
         <div className="flex items-center gap-2 mb-2">
           <Repeat className="w-5 h-5 text-[#22c55e]" />
           <h2 className="text-white font-semibold text-lg">지수 주간 자동매매 선택</h2>
@@ -348,7 +348,7 @@ export default function EtfList() {
       </div>
 
       {SECTIONS.map((sec) => (
-        <div key={sec.title} className="surface p-8">
+        <div key={sec.title} className="surface p-5 sm:p-8">
           <div className="flex items-center gap-2 mb-2">
             <Globe className="w-5 h-5" style={{ color: sec.iconColor }} />
             <h2 className="text-white font-semibold text-lg">{sec.title}</h2>

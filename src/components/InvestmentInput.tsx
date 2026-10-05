@@ -25,7 +25,7 @@ export default function InvestmentInput({
   onRefresh,
 }: Props) {
   return (
-    <div className="surface p-8">
+    <div className="surface p-5 sm:p-8">
       <div className="flex items-center gap-2 mb-6">
         <TrendingUp className="w-5 h-5 text-[#0066FF]" />
         <h2 className="text-white font-semibold text-lg tracking-tight">투자 설정</h2>

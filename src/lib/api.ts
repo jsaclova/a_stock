@@ -13,8 +13,9 @@ export async function fetchStockData(
   symbols: string = "QQQ,SPY",
   interval: string = "1mo",
 ): Promise<StockDataResponse> {
-  const url = `${SUPABASE_URL}/functions/v1/stock-data?monthlyAmount=${monthlyAmount}&range=${range}&symbols=${symbols}&interval=${interval}`;
+  const url = `${SUPABASE_URL}/functions/v1/stock-data?monthlyAmount=${monthlyAmount}&range=${encodeURIComponent(range)}&symbols=${encodeURIComponent(symbols)}&interval=${encodeURIComponent(interval)}&t=${Date.now()}`;
   const resp = await fetch(url, {
+    cache: "no-store",
     headers: {
       Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
       "Content-Type": "application/json",

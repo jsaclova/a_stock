@@ -12,13 +12,13 @@ const TABS = [
   { id: "portfolio" as const, label: "포트폴리오", icon: Briefcase },
   { id: "market" as const, label: "시장 정보", icon: CandlestickChart },
   { id: "etf" as const, label: "지수ETF", icon: Layers },
-  { id: "topstocks" as const, label: "상위 100종목", icon: TrendingUp },
+  { id: "topstocks" as const, label: "상위 50종목", icon: TrendingUp },
   { id: "decline" as const, label: "가상하락 시나리오", icon: TrendingDown },
 ];
 
 export default function TabBar({ active, onChange }: Props) {
   return (
-    <div className="flex gap-1.5 rounded-[20px] p-1.5 border border-white/[0.14] bg-white/[0.04]">
+    <div className="flex gap-1.5 rounded-[20px] p-1.5 border border-white/[0.14] bg-white/[0.04] overflow-x-auto">
       {TABS.map((tab) => {
         const Icon = tab.icon;
         const isActive = active === tab.id;
@@ -26,7 +26,7 @@ export default function TabBar({ active, onChange }: Props) {
           <button
             key={tab.id}
             onClick={() => onChange(tab.id)}
-            className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-2xl text-sm font-semibold ${
+            className={`flex-1 sm:flex-1 shrink-0 flex items-center justify-center gap-2 py-3 px-4 rounded-2xl text-sm font-semibold whitespace-nowrap ${
               isActive ? "btn-primary" : "btn-secondary"
             }`}
           >

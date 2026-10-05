@@ -1,6 +1,6 @@
 import { corsHeaders } from "../_shared/cors.ts";
 
-const TOP100: { symbol: string; name: string }[] = [
+const TOP50: { symbol: string; name: string }[] = [
   { symbol: "AAPL", name: "Apple" },
   { symbol: "MSFT", name: "Microsoft" },
   { symbol: "NVDA", name: "NVIDIA" },
@@ -31,7 +31,7 @@ const TOP100: { symbol: string; name: string }[] = [
   { symbol: "TMO", name: "Thermo Fisher" },
   { symbol: "MCD", name: "McDonald's" },
   { symbol: "CSCO", name: "Cisco" },
-  // 31~100위
+  // 31~50위
   { symbol: "AMD", name: "AMD" },
   { symbol: "ORCL", name: "Oracle" },
   { symbol: "TXN", name: "Texas Instruments" },
@@ -52,57 +52,6 @@ const TOP100: { symbol: string; name: string }[] = [
   { symbol: "UBER", name: "Uber" },
   { symbol: "SBUX", name: "Starbucks" },
   { symbol: "AMGN", name: "Amgen" },
-  { symbol: "QCOM", name: "Qualcomm" },
-  { symbol: "LOW", name: "Lowe's" },
-  { symbol: "NEE", name: "NextEra Energy" },
-  { symbol: "BKNG", name: "Booking" },
-  { symbol: "GE", name: "GE Aerospace" },
-  { symbol: "PLTR", name: "Palantir" },
-  { symbol: "NOW", name: "ServiceNow" },
-  { symbol: "ADBE", name: "Adobe" },
-  { symbol: "IBM", name: "IBM" },
-  { symbol: "INTU", name: "Intuit" },
-  { symbol: "DHR", name: "Danaher" },
-  { symbol: "LIN", name: "Linde" },
-  { symbol: "MDT", name: "Medtronic" },
-  { symbol: "SYK", name: "Stryker" },
-  { symbol: "PGR", name: "Progressive" },
-  { symbol: "ADP", name: "ADP" },
-  { symbol: "CMCSA", name: "Comcast" },
-  { symbol: "VZ", name: "Verizon" },
-  { symbol: "T", name: "AT&T" },
-  { symbol: "ABT", name: "Abbott" },
-  { symbol: "UPS", name: "UPS" },
-  { symbol: "NKE", name: "Nike" },
-  { symbol: "SHOP", name: "Shopify" },
-  { symbol: "MMM", name: "3M" },
-  { symbol: "ETN", name: "Eaton" },
-  { symbol: "PH", name: "Parker Hannifin" },
-  { symbol: "ICE", name: "Intercontinental Exchange" },
-  { symbol: "MSCI", name: "MSCI" },
-  { symbol: "MMC", name: "Marsh & McLennan" },
-  { symbol: "LULU", name: "lululemon" },
-  { symbol: "GM", name: "General Motors" },
-  { symbol: "F", name: "Ford" },
-  { symbol: "BA", name: "Boeing" },
-  { symbol: "KKR", name: "KKR" },
-  { symbol: "EMR", name: "Emerson" },
-  { symbol: "AON", name: "Aon" },
-  { symbol: "WELL", name: "Welltower" },
-  { symbol: "AMT", name: "American Tower" },
-  { symbol: "DUK", name: "Duke Energy" },
-  { symbol: "SO", name: "Southern Company" },
-  { symbol: "BMY", name: "Bristol-Myers Squibb" },
-  { symbol: "GILD", name: "Gilead" },
-  { symbol: "CVS", name: "CVS Health" },
-  { symbol: "CB", name: "Chubb" },
-  { symbol: "MO", name: "Altria" },
-  { symbol: "CL", name: "Colgate-Palmolive" },
-  { symbol: "DE", name: "Deere" },
-  { symbol: "FDX", name: "FedEx" },
-  { symbol: "PANW", name: "Palo Alto Networks" },
-  { symbol: "CRWD", name: "CrowdStrike" },
-  { symbol: "LMT", name: "Lockheed Martin" },
 ];
 
 interface Row {
@@ -209,7 +158,7 @@ Deno.serve(async (req) => {
   }
   try {
     const rows = (
-      await Promise.all(TOP100.map((s, i) => fetchDaily(s.symbol, s.name, i + 1)))
+      await Promise.all(TOP50.map((s, i) => fetchDaily(s.symbol, s.name, i + 1)))
     ).filter((r): r is Row => r !== null);
 
     // 시가총액 조회 후 시총 내림차순으로 정렬, 순위 재부여

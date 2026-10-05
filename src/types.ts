@@ -3,6 +3,15 @@ export interface PricePoint {
   close: number;
 }
 
+export interface Candle {
+  t: number;
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+  volume: number | null;
+}
+
 export interface DcaResult {
   symbol: string;
   name: string;
@@ -14,6 +23,9 @@ export interface DcaResult {
   totalReturnPct: number;
   latestPrice: number;
   earliestPrice: number;
+  candles?: Candle[];
+  prevClose?: number;
+  regularPrice?: number;
 }
 
 export interface ScenarioPoint {
@@ -118,6 +130,8 @@ export interface TickerResponse {
   change: number;
   changePct: number;
   spark: number[];
+  candles?: Candle[];
+  prevClose?: number;
   url: string;
 }
 

@@ -78,16 +78,16 @@ export default function MarketQuotes({ groups, loading, fetchedAt, onRefresh }: 
                   const up = item.change >= 0;
                   const color = up ? "#00C853" : "#FF3B30";
                   return (
-                    <div key={item.symbol} className="flex items-center justify-between px-5 py-3.5 gap-3">
+                    <div key={item.symbol} className="flex items-center justify-between px-4 sm:px-5 py-3.5 gap-2 sm:gap-3">
                       <a
                         href={item.url ?? "#"}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-white text-[15px] font-bold shrink-0 w-32 truncate hover:text-[#3388FF] transition-colors"
+                        className="text-white text-[15px] font-bold shrink-0 w-24 sm:w-32 truncate hover:text-[#3388FF] transition-colors"
                       >
                         {item.name}
                       </a>
-                      <div className="flex-1" />
+                      <div className="flex-1 min-w-0" />
                       <span className="flex items-baseline gap-1">
                         <span className="text-white font-semibold tabular-nums text-right">
                           {formatPrice(item)}
@@ -101,14 +101,14 @@ export default function MarketQuotes({ groups, loading, fetchedAt, onRefresh }: 
                         </span>
                       </span>
                       {item.spark && item.spark.length >= 2 ? (
-                        <span className="w-[120px] flex justify-end shrink-0 ml-6">
+                        <span className="w-[120px] hidden min-[480px]:flex justify-end shrink-0 ml-2 sm:ml-6">
                           <Sparkline
                             points={item.spark}
                             color={item.change >= 0 ? "#00C853" : "#FF3B30"}
                           />
                         </span>
                       ) : (
-                        <span className="w-[120px] shrink-0" />
+                        <span className="w-[120px] shrink-0 hidden min-[480px]:block" />
                       )}
                     </div>
                   );

@@ -26,7 +26,7 @@
   단, `supabase/migrations/20261005000000_auto_trade_settings.sql` +
   `20261006000000_auto_trade_schedule.sql`을 Cloud SQL Editor에서 실행하고,
   Auth → Providers → Email에서 Confirm email을 꺼야 합니다.
-- Hobby 플랜에서 `top-stocks`(100종목 조회)가 타임아웃되면 Pro 플랜 또는
+- Hobby 플랜에서 `top-stocks`(50종목 조회)가 타임아웃되면 Pro 플랜 또는
   `api/top-stocks.ts`의 종목 수 축소를 검토하세요.
 
 ## CasaOS 배포

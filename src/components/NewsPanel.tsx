@@ -6,6 +6,7 @@ interface Props {
   news: NewsItem[];
   loading: boolean;
   onRefresh: () => void;
+  maxHeight?: number | null;
 }
 
 function sentimentColor(score: number): string {
@@ -20,10 +21,10 @@ function sentimentBg(score: number): string {
   return "rgba(138, 143, 155, 0.12)";
 }
 
-export default function NewsPanel({ news, loading, onRefresh }: Props) {
+export default function NewsPanel({ news, loading, onRefresh, maxHeight }: Props) {
   return (
-    <div className="surface flex flex-col h-full">
-      <div className="flex items-center justify-between p-7 border-b border-white/[0.12]">
+    <div className="surface flex flex-col h-full overflow-hidden" style={maxHeight ? { maxHeight } : undefined}>
+      <div className="flex items-center justify-between gap-3 p-5 sm:p-7 border-b border-white/[0.12] shrink-0">
         <div className="flex items-center gap-2">
           <Newspaper className="w-5 h-5 text-[#0066FF]" />
           <h2 className="text-white font-semibold text-lg tracking-tight">오늘의 미국 증시 뉴스</h2>
@@ -37,7 +38,7 @@ export default function NewsPanel({ news, loading, onRefresh }: Props) {
         </button>
       </div>
 
-      <div className="flex-1 overflow-y-auto divide-y divide-white/[0.05] max-h-[600px]">
+      <div className="flex-1 min-h-0 overflow-y-auto divide-y divide-white/[0.05] max-h-[70vh] lg:max-h-none">
         {loading && news.length === 0 ? (
           <div className="p-8 text-center text-[#C5CAD3] text-sm">
             뉴스를 불러오는 중...

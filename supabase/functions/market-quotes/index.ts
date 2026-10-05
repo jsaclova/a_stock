@@ -158,7 +158,7 @@ async function fetchYahooQuote(name: string, symbol: string, unit: string): Prom
   try {
     const encoded = encodeURIComponent(symbol);
     const resp = await fetchWithTimeout(
-      `https://query1.finance.yahoo.com/v8/finance/chart/${encoded}?range=1y&interval=1wk`,
+      `https://query1.finance.yahoo.com/v8/finance/chart/${encoded}?range=3mo&interval=1d`,
       {
         headers: {
           "User-Agent":
@@ -171,12 +171,14 @@ async function fetchYahooQuote(name: string, symbol: string, unit: string): Prom
     const meta = data.chart?.result?.[0]?.meta;
     if (!meta || meta.regularMarketPrice == null) return null;
     const price = meta.regularMarketPrice as number;
-    const prev = (meta.chartPreviousClose ?? meta.previousClose ?? price) as number;
-    const change = price - prev;
 
     const quote = data.chart?.result?.[0]?.indicators?.quote?.[0];
     const closes: (number | null)[] = quote?.close ?? [];
     const spark = closes.filter((c): c is number => c !== null && c !== undefined && !isNaN(c));
+    // 일일 등락률: 직전 일봉 종가 기준 (chartPreviousClose는 조회 범위 시작점 기준이라 사용 안 함)
+    const prevDaily = spark.length >= 2 ? spark[spark.length - 2] : null;
+    const prev = (prevDaily ?? meta.chartPreviousClose ?? meta.previousClose ?? price) as number;
+    const change = price - prev;
 
     return {
       name,

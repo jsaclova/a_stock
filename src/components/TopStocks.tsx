@@ -24,9 +24,9 @@ function formatMarketCap(v: number | null): string {
 export default function TopStocks({ rows, loading, fetchedAt, onRefresh }: Props) {
   return (
     <div className="surface">
-      <div className="flex items-center justify-between p-7 border-b border-white/[0.12]">
-        <div>
-          <h2 className="text-white font-semibold text-lg tracking-tight">상위 100개 종목 일별 주가</h2>
+      <div className="flex items-center justify-between gap-3 flex-wrap p-5 sm:p-7 border-b border-white/[0.12]">
+        <div className="min-w-0">
+          <h2 className="text-white font-semibold text-lg tracking-tight">상위 50개 종목 일별 주가</h2>
           <p className="text-[#C5CAD3] text-xs mt-1">
             {fetchedAt
               ? `마지막 업데이트: ${new Date(fetchedAt).toLocaleString("ko-KR")}`
@@ -37,7 +37,7 @@ export default function TopStocks({ rows, loading, fetchedAt, onRefresh }: Props
         <button
           onClick={onRefresh}
           disabled={loading}
-          className="btn-secondary text-sm font-medium px-3 py-1.5 rounded-xl disabled:opacity-50"
+          className="btn-secondary text-sm font-medium px-3 py-1.5 rounded-xl disabled:opacity-50 shrink-0"
         >
           {loading ? "로딩..." : "새로고침"}
         </button>
@@ -47,7 +47,7 @@ export default function TopStocks({ rows, loading, fetchedAt, onRefresh }: Props
         <div className="p-8 text-center text-[#C5CAD3] text-sm">종목 데이터를 불러오는 중...</div>
       ) : (
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className="w-full min-w-[640px] text-sm">
             <thead>
               <tr className="text-[#C5CAD3] text-xs border-b border-white/[0.08]">
                 <th className="text-left font-medium px-5 py-3">순위</th>

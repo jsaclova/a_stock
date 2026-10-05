@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { AlertCircle, LogIn, LogOut } from "lucide-react";
 import type { User } from "@supabase/supabase-js";
 import InvestmentInput from "@/components/InvestmentInput";
@@ -48,6 +48,27 @@ export default function App() {
   const [portfolioLoading, setPortfolioLoading] = useState(true);
   const [portfolioError, setPortfolioError] = useState<string | null>(null);
   const [portfolioFetchedAt, setPortfolioFetchedAt] = useState<string | null>(null);
+  // 뉴스 패널 높이를 왼쪽 자산성장추이(대시보드 좌측 컬럼) 끝선에 맞춤
+  const leftColRef = useRef<HTMLDivElement>(null);
+  const [newsMaxH, setNewsMaxH] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (tab !== "dashboard") return;
+    const el = leftColRef.current;
+    if (!el) return;
+    const mq = window.matchMedia("(min-width: 1024px)");
+    const update = () => setNewsMaxH(mq.matches ? el.offsetHeight : null);
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    mq.addEventListener("change", update);
+    window.addEventListener("resize", update);
+    return () => {
+      ro.disconnect();
+      mq.removeEventListener("change", update);
+      window.removeEventListener("resize", update);
+    };
+  }, [tab, results, stockLoading, stockError]);
 
   const loadStockData = useCallback(async () => {
     setStockLoading(true);
@@ -190,8 +211,8 @@ export default function App() {
     <div className="min-h-screen bg-[#0B0F17] text-white">
       <AuthDialog open={authOpen} onClose={() => setAuthOpen(false)} />
       <header className="sticky top-0 z-10 border-b border-white/[0.12] bg-[#0B0F17]/85 backdrop-blur-2xl">
-        <div className="max-w-7xl mx-auto px-5 sm:px-8 py-6 flex items-end justify-between gap-4">
-          <div className="min-w-0">
+        <div className="max-w-7xl mx-auto px-5 sm:px-8 py-6 flex items-end justify-between gap-x-4 gap-y-5 flex-wrap">
+          <div className="min-w-0 flex-1 basis-44">
             <p className="text-[#C5CAD3] text-xs font-medium tracking-[0.14em] uppercase mb-2">
               US Index
             </p>
@@ -200,18 +221,18 @@ export default function App() {
             </h1>
             <p className="text-[#C5CAD3] text-sm mt-2">QQQ · SPY 분할 매수 시뮬레이터</p>
           </div>
-          <div className="shrink-0 pb-1 flex items-end gap-2">
+          <div className="flex items-center gap-2 flex-nowrap min-w-0 w-full sm:w-auto justify-end">
             <TickerSearch />
             {supabase &&
               (user ? (
                 <>
-                  <span className="hidden md:inline text-xs text-[#C5CAD3] pb-2 max-w-40 truncate">
+                  <span className="hidden md:inline text-xs text-[#C5CAD3] max-w-40 truncate shrink-0">
                     {user.email}
                   </span>
                   <button
                     onClick={handleLogout}
                     title="로그아웃"
-                    className="btn-secondary p-2 rounded-xl flex items-center gap-1.5 text-xs font-semibold"
+                    className="btn-secondary p-2 rounded-xl flex items-center gap-1.5 text-xs font-semibold shrink-0 whitespace-nowrap"
                   >
                     <LogOut className="w-4 h-4" />
                     <span className="hidden sm:inline">로그아웃</span>
@@ -220,10 +241,11 @@ export default function App() {
               ) : (
                 <button
                   onClick={() => setAuthOpen(true)}
-                  className="flex items-center gap-1.5 bg-[#0066FF] text-white text-sm font-semibold px-3.5 py-2 rounded-xl hover:bg-[#0052cc] transition-colors"
+                  title="로그인"
+                  aria-label="로그인"
+                  className="shrink-0 flex items-center bg-[#0066FF] text-white p-2 rounded-xl hover:bg-[#0052cc] transition-colors"
                 >
                   <LogIn className="w-4 h-4" />
-                  로그인
                 </button>
               ))}
           </div>
@@ -246,7 +268,7 @@ export default function App() {
         {tab === "topstocks" ? (
           <div>
             {topStocksError ? (
-              <div className="surface p-8 flex items-center gap-3 text-red-400">
+              <div className="surface p-5 sm:p-8 flex items-center gap-3 text-red-400">
                 <AlertCircle className="w-5 h-5 shrink-0" />
                 <div>
                   <p className="font-semibold text-sm">종목 데이터를 불러오지 못했습니다</p>
@@ -265,7 +287,7 @@ export default function App() {
         ) : tab === "portfolio" ? (
           <div>
             {portfolioError ? (
-              <div className="surface p-8 flex items-center gap-3 text-red-400">
+              <div className="surface p-5 sm:p-8 flex items-center gap-3 text-red-400">
                 <AlertCircle className="w-5 h-5 shrink-0" />
                 <div>
                   <p className="font-semibold text-sm">포트폴리오를 불러오지 못했습니다</p>
@@ -283,7 +305,7 @@ export default function App() {
           </div>
         ) : tab === "dashboard" ? (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            <div className="lg:col-span-8 space-y-6">
+            <div ref={leftColRef} className="lg:col-span-8 space-y-6 min-w-0">
               <InvestmentInput
                 monthlyAmount={monthlyAmount}
                 range={range}
@@ -294,7 +316,7 @@ export default function App() {
               />
 
               {stockError ? (
-                <div className="surface p-8 flex items-center gap-3 text-red-400">
+                <div className="surface p-5 sm:p-8 flex items-center gap-3 text-red-400">
                   <AlertCircle className="w-5 h-5 shrink-0" />
                   <div>
                     <p className="font-semibold text-sm">데이터를 불러오지 못했습니다</p>
@@ -305,7 +327,7 @@ export default function App() {
                   </div>
                 </div>
               ) : stockLoading ? (
-                <div className="surface p-8">
+                <div className="surface p-5 sm:p-8">
                   <div className="animate-pulse space-y-4">
                     <div className="h-4 bg-white/[0.08] rounded w-1/3" />
                     <div className="h-64 bg-white/[0.08] rounded-2xl" />
@@ -333,9 +355,9 @@ export default function App() {
               )}
             </div>
 
-            <div className="lg:col-span-4">
+            <div className="lg:col-span-4 min-h-0">
               {newsError ? (
-                <div className="surface p-8 flex items-center gap-3 text-red-400">
+                <div className="surface p-5 sm:p-8 flex items-center gap-3 text-red-400">
                   <AlertCircle className="w-5 h-5 shrink-0" />
                   <div>
                     <p className="font-semibold text-sm">뉴스를 불러오지 못했습니다</p>
@@ -343,7 +365,7 @@ export default function App() {
                   </div>
                 </div>
               ) : (
-                <NewsPanel news={news} loading={newsLoading} onRefresh={loadNews} />
+                <NewsPanel news={news} loading={newsLoading} onRefresh={loadNews} maxHeight={newsMaxH} />
               )}
             </div>
           </div>
@@ -352,7 +374,7 @@ export default function App() {
             <DeclineSlider declinePct={declinePct} onChange={setDeclinePct} />
 
             {stockError ? (
-              <div className="surface p-8 flex items-center gap-3 text-red-400">
+              <div className="surface p-5 sm:p-8 flex items-center gap-3 text-red-400">
                 <AlertCircle className="w-5 h-5 shrink-0" />
                 <div>
                   <p className="font-semibold text-sm">데이터를 불러오지 못했습니다</p>
@@ -360,7 +382,7 @@ export default function App() {
                 </div>
               </div>
             ) : stockLoading ? (
-              <div className="surface p-8">
+              <div className="surface p-5 sm:p-8">
                 <div className="animate-pulse space-y-4">
                   <div className="h-4 bg-white/[0.08] rounded w-1/3" />
                   <div className="h-48 bg-white/[0.08] rounded-2xl" />
@@ -370,7 +392,7 @@ export default function App() {
               scenarios.length > 0 && (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                   {scenarios.map((s) => (
-                    <div key={s.symbol} className="surface p-6 space-y-4">
+                    <div key={s.symbol} className="surface p-4 sm:p-6 space-y-4">
                       <div className="flex items-baseline justify-between">
                         <p className="text-white font-bold text-lg">{s.symbol}</p>
                         <p className="text-[#C5CAD3] text-xs">-{s.declinePct}%</p>
@@ -457,7 +479,7 @@ export default function App() {
         ) : tab === "market" ? (
           <div>
             {quotesError ? (
-              <div className="surface p-8 flex items-center gap-3 text-red-400">
+              <div className="surface p-5 sm:p-8 flex items-center gap-3 text-red-400">
                 <AlertCircle className="w-5 h-5 shrink-0" />
                 <div>
                   <p className="font-semibold text-sm">시세를 불러오지 못했습니다</p>

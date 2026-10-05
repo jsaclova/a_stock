@@ -7,7 +7,7 @@ interface Props {
 
 export default function DeclineSlider({ declinePct, onChange }: Props) {
   return (
-    <div className="surface p-8">
+    <div className="surface p-5 sm:p-8">
       <div className="flex items-center gap-2 mb-6">
         <TrendingDown className="w-5 h-5 text-[#f59e0b]" />
         <h2 className="text-white font-semibold text-lg tracking-tight">가상 하락 시나리오</h2>

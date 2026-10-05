@@ -7,13 +7,18 @@ export default function FxRatesStrip() {
 
   useEffect(() => {
     let cancelled = false;
-    fetchFxKrw()
-      .then((data) => {
-        if (!cancelled) setRates(data.rates);
-      })
-      .catch(() => {});
+    const load = () => {
+      fetchFxKrw()
+        .then((data) => {
+          if (!cancelled) setRates(data.rates);
+        })
+        .catch(() => {});
+    };
+    load();
+    const timer = setInterval(load, 60_000);
     return () => {
       cancelled = true;
+      clearInterval(timer);
     };
   }, []);
 

@@ -41,13 +41,13 @@ export default function StatsCard({ result, scenario }: Props) {
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {cards.map((card) => {
           const Icon = card.icon;
           return (
             <div
               key={card.label}
-              className="surface p-6"
+              className="surface p-4 sm:p-6 min-w-0"
             >
               <div className="flex items-center gap-1.5 mb-3">
                 <Icon className="w-4 h-4" style={{ color: card.color }} />
@@ -56,7 +56,7 @@ export default function StatsCard({ result, scenario }: Props) {
                 </span>
               </div>
               <p
-                className="text-xl font-bold tracking-tight tabular-nums"
+                className="text-lg sm:text-xl font-bold tracking-tight tabular-nums break-words"
                 style={{ color: card.color === "#8a8f9b" ? "#fff" : card.color }}
               >
                 {card.value}
@@ -71,7 +71,7 @@ export default function StatsCard({ result, scenario }: Props) {
 
       {scenario && (
         <div className="grid grid-cols-2 gap-4">
-          <div className="surface p-6 border-[#f59e0b]/20">
+          <div className="surface p-4 sm:p-6 border-[#f59e0b]/20">
             <div className="flex items-center gap-1.5 mb-3">
               <AlertTriangle className="w-4 h-4 text-[#f59e0b]" />
               <span className="text-[#C5CAD3] text-xs font-medium">
@@ -85,7 +85,7 @@ export default function StatsCard({ result, scenario }: Props) {
               {formatUsd(scenario.maxDrawdownValue)}
             </p>
           </div>
-          <div className="surface p-6">
+          <div className="surface p-4 sm:p-6">
             <div className="flex items-center gap-1.5 mb-3">
               <TrendingDown className="w-4 h-4 text-[#ef4444]" />
               <span className="text-[#C5CAD3] text-xs font-medium">
