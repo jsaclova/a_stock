@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
-import { AlertCircle, LogIn, LogOut } from "lucide-react";
-import type { User } from "@supabase/supabase-js";
+import { AlertCircle } from "lucide-react";
 import InvestmentInput from "@/components/InvestmentInput";
 import StatsCard from "@/components/StatsCard";
 import GrowthChart from "@/components/GrowthChart";
@@ -13,8 +12,6 @@ import TickerSearch from "@/components/TickerSearch";
 import TopStocks from "@/components/TopStocks";
 import EtfList from "@/components/EtfList";
 import PortfolioPanel from "@/components/PortfolioPanel";
-import AuthDialog from "@/components/AuthDialog";
-import { supabase } from "@/lib/supabase";
 import FxRatesStrip from "@/components/FxRatesStrip";
 import IndexTicker from "@/components/IndexTicker";
 import { fetchStockData, fetchMarketNews, fetchMarketQuotes, fetchTopStocks, fetchPortfolio } from "@/lib/api";
@@ -25,8 +22,6 @@ import type { DcaResult, NewsItem, ScenarioResult } from "@/types";
 
 export default function App() {
   const [tab, setTab] = useState<TabId>("dashboard");
-  const [user, setUser] = useState<User | null>(null);
-  const [authOpen, setAuthOpen] = useState(false);
   const [monthlyAmount, setMonthlyAmount] = useState(500);
   const [range, setRange] = useState("5y");
   const [declinePct, setDeclinePct] = useState(30);
@@ -173,24 +168,6 @@ export default function App() {
   }, [loadQuotes]);
 
   useEffect(() => {
-    if (!supabase) return;
-    supabase.auth.getSession().then(({ data }) => {
-      setUser(data.session?.user ?? null);
-    });
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-    });
-    return () => {
-      listener.subscription.unsubscribe();
-    };
-  }, []);
-
-  const handleLogout = useCallback(async () => {
-    await supabase?.auth.signOut();
-    setUser(null);
-  }, []);
-
-  useEffect(() => {
     loadNews();
   }, [loadNews]);
 
@@ -209,7 +186,6 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-[#0B0F17] text-white">
-      <AuthDialog open={authOpen} onClose={() => setAuthOpen(false)} />
       <header className="sticky top-0 z-10 border-b border-white/[0.12] bg-[#0B0F17]/85 backdrop-blur-2xl">
         <div className="max-w-7xl mx-auto px-5 sm:px-8 py-6 flex items-end justify-between gap-x-4 gap-y-5 flex-wrap">
           <div className="min-w-0 flex-1 basis-44">
@@ -223,31 +199,6 @@ export default function App() {
           </div>
           <div className="flex items-center gap-2 flex-nowrap min-w-0 w-full sm:w-auto justify-end">
             <TickerSearch />
-            {supabase &&
-              (user ? (
-                <>
-                  <span className="hidden md:inline text-xs text-[#C5CAD3] max-w-40 truncate shrink-0">
-                    {user.email}
-                  </span>
-                  <button
-                    onClick={handleLogout}
-                    title="로그아웃"
-                    className="btn-secondary p-2 rounded-xl flex items-center gap-1.5 text-xs font-semibold shrink-0 whitespace-nowrap"
-                  >
-                    <LogOut className="w-4 h-4" />
-                    <span className="hidden sm:inline">로그아웃</span>
-                  </button>
-                </>
-              ) : (
-                <button
-                  onClick={() => setAuthOpen(true)}
-                  title="로그인"
-                  aria-label="로그인"
-                  className="shrink-0 flex items-center bg-[#0066FF] text-white p-2 rounded-xl hover:bg-[#0052cc] transition-colors"
-                >
-                  <LogIn className="w-4 h-4" />
-                </button>
-              ))}
           </div>
         </div>
       </header>

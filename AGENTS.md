@@ -1,6 +1,6 @@
 # AGENTS.md
 
-미국지수 적립식 투자(DCA) 대시보드 — Vite + React 18 + TS 프런트엔드, Supabase Edge Functions 백엔드.
+미국지수 적립식 투자(DCA) 대시보드 — Vite + React 18 + TS 프런트엔드, Deno Edge Functions 백엔드. DB/로그인 없음 (자동매매 설정은 브라우저 로컬 저장).
 
 ## Commands
 
@@ -19,8 +19,8 @@
 
 ## 환경
 
-- `.env` 필수: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` (gitignore 처리됨, 커밋 금지)
-- 프런트는 이 env로 `${SUPABASE_URL}/functions/v1/*` 를 직접 fetch (`src/lib/api.ts`)
+- 환경 변수 불필요. 프런트는 같은 origin의 `/functions/v1/*` 를 직접 fetch (`src/lib/api.ts`)
+  (Vercel: `vercel.json` rewrite → `/api/*`, CasaOS: nginx 프록시, 로컬 dev: vite proxy)
 
 ## Conventions
 

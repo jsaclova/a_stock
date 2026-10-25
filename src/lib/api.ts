@@ -1,11 +1,8 @@
 import type { StockDataResponse, NewsResponse, MarketQuotesResponse, TopStocksResponse, FxKrwResponse, TickerResponse, PortfolioResponse } from "@/types";
 
-// 시장 데이터 함수 base: Cloud URL(supabase.co)이면 같은 origin 사용.
-// Cloud에는 Edge Functions가 없으므로, 데이터는 항상
-// 로컬 스택·CasaOS 프록시·Vercel /api 중 같은 origin에서 가져온다.
-const RAW_BASE = import.meta.env.VITE_SUPABASE_URL || "";
-const SUPABASE_URL = RAW_BASE.includes("supabase.co") ? "" : RAW_BASE;
-const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || "";
+// 시장 데이터 함수 base: 항상 같은 origin (DB/인증 없음).
+// Vercel은 vercel.json rewrite → /api, CasaOS는 nginx 프록시, 로컬 dev는 vite proxy가 전달.
+const SUPABASE_URL = "";
 
 export async function fetchStockData(
   monthlyAmount: number,
@@ -16,10 +13,6 @@ export async function fetchStockData(
   const url = `${SUPABASE_URL}/functions/v1/stock-data?monthlyAmount=${monthlyAmount}&range=${encodeURIComponent(range)}&symbols=${encodeURIComponent(symbols)}&interval=${encodeURIComponent(interval)}&t=${Date.now()}`;
   const resp = await fetch(url, {
     cache: "no-store",
-    headers: {
-      Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-      "Content-Type": "application/json",
-    },
   });
   if (!resp.ok) {
     const err = await resp.json().catch(() => ({}));
@@ -32,10 +25,6 @@ export async function fetchTopStocks(): Promise<TopStocksResponse> {
   const url = `${SUPABASE_URL}/functions/v1/top-stocks?t=${Date.now()}`;
   const resp = await fetch(url, {
     cache: "no-store",
-    headers: {
-      Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-      "Content-Type": "application/json",
-    },
   });
   if (!resp.ok) {
     const err = await resp.json().catch(() => ({}));
@@ -48,10 +37,6 @@ export async function fetchFxKrw(): Promise<FxKrwResponse> {
   const url = `${SUPABASE_URL}/functions/v1/fx-krw?t=${Date.now()}`;
   const resp = await fetch(url, {
     cache: "no-store",
-    headers: {
-      Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-      "Content-Type": "application/json",
-    },
   });
   if (!resp.ok) {
     const err = await resp.json().catch(() => ({}));
@@ -70,10 +55,6 @@ export async function fetchPortfolio(
   const url = `${SUPABASE_URL}/functions/v1/portfolio?symbol=${encodeURIComponent(symbol)}&shares=${shares}&frequency=${frequency}&weekday=${weekday}&monthday=${monthday}&t=${Date.now()}`;
   const resp = await fetch(url, {
     cache: "no-store",
-    headers: {
-      Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-      "Content-Type": "application/json",
-    },
   });
   if (!resp.ok) {
     const err = await resp.json().catch(() => ({}));
@@ -86,10 +67,6 @@ export async function fetchTicker(symbol: string): Promise<TickerResponse> {
   const url = `${SUPABASE_URL}/functions/v1/ticker?symbol=${encodeURIComponent(symbol)}&t=${Date.now()}`;
   const resp = await fetch(url, {
     cache: "no-store",
-    headers: {
-      Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-      "Content-Type": "application/json",
-    },
   });
   if (!resp.ok) {
     const err = await resp.json().catch(() => ({}));
@@ -102,10 +79,6 @@ export async function fetchMarketQuotes(): Promise<MarketQuotesResponse> {
   const url = `${SUPABASE_URL}/functions/v1/market-quotes?t=${Date.now()}`;
   const resp = await fetch(url, {
     cache: "no-store",
-    headers: {
-      Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-      "Content-Type": "application/json",
-    },
   });
   if (!resp.ok) {
     const err = await resp.json().catch(() => ({}));
@@ -119,10 +92,6 @@ export async function fetchMarketNews(): Promise<NewsResponse> {
   const url = `${SUPABASE_URL}/functions/v1/market-news?t=${Date.now()}`;
   const resp = await fetch(url, {
     cache: "no-store",
-    headers: {
-      Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-      "Content-Type": "application/json",
-    },
   });
   if (!resp.ok) {
     const err = await resp.json().catch(() => ({}));

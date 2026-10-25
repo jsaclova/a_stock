@@ -1,5 +1,4 @@
 import { ETF_LIST } from "@/lib/etfData";
-import { supabase } from "@/lib/supabase";
 
 export interface AutoTradeSetting {
   symbol: string;
@@ -70,36 +69,8 @@ function writeLocal(setting: AutoTradeSetting): void {
   }
 }
 
-// 로그인 상태면 Supabase 개인 설정을, 아니면 브라우저 로컬 설정을 사용
+// 자동매매 설정은 브라우저 로컬에만 저장 (DB/로그인 없음)
 export async function loadAutoTrade(): Promise<AutoTradeSetting> {
-  if (supabase) {
-    try {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      if (session?.user) {
-        const { data, error } = await supabase
-          .from("auto_trade_settings")
-          .select("symbol, shares, frequency, weekday, monthday")
-          .eq("user_id", session.user.id)
-          .maybeSingle();
-        if (!error && data) {
-          return (
-            sanitize(
-              String(data.symbol ?? ""),
-              Number(data.shares),
-              (data as { frequency?: unknown }).frequency,
-              (data as { weekday?: unknown }).weekday,
-              (data as { monthday?: unknown }).monthday,
-            ) ?? { ...DEFAULT_SETTING }
-          );
-        }
-        return { ...DEFAULT_SETTING };
-      }
-    } catch {
-      // 네트워크 오류 등은 로컬 폴백
-    }
-  }
   return readLocal();
 }
 
@@ -107,29 +78,5 @@ export async function saveAutoTrade(setting: AutoTradeSetting): Promise<void> {
   const clean =
     sanitize(setting.symbol, setting.shares, setting.frequency, setting.weekday, setting.monthday) ??
     { ...DEFAULT_SETTING };
-  if (supabase) {
-    try {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      if (session?.user) {
-        const { error } = await supabase.from("auto_trade_settings").upsert(
-          {
-            user_id: session.user.id,
-            symbol: clean.symbol,
-            shares: clean.shares,
-            frequency: clean.frequency,
-            weekday: clean.weekday,
-            monthday: clean.monthday,
-            updated_at: new Date().toISOString(),
-          },
-          { onConflict: "user_id" },
-        );
-        if (!error) return;
-      }
-    } catch {
-      // 폴백
-    }
-  }
   writeLocal(clean);
 }
